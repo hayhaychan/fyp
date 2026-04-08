@@ -1,0 +1,6 @@
+train: /Users/hayhay/Documents/labelme_json_dir/YOLODataset/images/train/
+val: /Users/hayhay/Documents/labelme_json_dir/YOLODataset/images/val/
+
+nc: 3
+
+names: ['bottle', 'can', 'box']
