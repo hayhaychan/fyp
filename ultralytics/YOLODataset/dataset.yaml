@@ -1,6 +1,9 @@
-train: /Users/hayhay/Documents/labelme_json_dir/YOLODataset/images/train/
-val: /Users/hayhay/Documents/labelme_json_dir/YOLODataset/images/val/
+train: /Users/hayhay/Documents/fyp.v1i.yolov8-obb/train/images/
+val: /Users/hayhay/Documents/fyp.v1i.yolov8-obb/valid/images/
 
 nc: 3
 
-names: ['bottle', 'can', 'box']
+names: 
+  0: bottle
+  1: box
+  2: can

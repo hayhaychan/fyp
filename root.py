@@ -1,10 +1,18 @@
 import tkinter as tk
+from unittest import result
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from ultralytics import YOLO
 import cvzone
-import my_predict_P
+from patched_yolo_infer import(
+    visualize_results_usual_yolo_inference,
+    get_crops,
+)
+from ultralytics.engine import results
+from datetime import datetime  
+import csv
+import io
 
 label1 = "Welcome to my final year project\n I'm Chan Lok Hei 22068341D\n This project aims to help enhancing the speed of classifying garbage." 
 
@@ -18,27 +26,97 @@ def recreate():
     root.update()
     root.deiconify()
      
+
 def prediction_R():
     global root
-    model = YOLO("/Users/hayhay/Documents/ultralytics-main/runs/detect/train11/weights/best.pt")
-    results = model.predict(source=0, show=True)
-    print (results)
-    if cv2.waitKey(1) == ord('z'):
-        print("a")
-        root.deiconify()
+    root.withdraw()
+    model = YOLO("/Users/hayhay/Documents/ultralytics-main/runs/detect/train14/weights/best.pt")
+    cap = cv2.VideoCapture(0)
+    session_data = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        results = model(frame)
+        if len(results[0].boxes) > 0:
+            for box in results[0].boxes:
+            # Get the ID (number) and convert it to a Name (string)
+                class_id = int(box.cls[0])
+                class_name = model.names[class_id]
+                conf_score = round(float(box.conf[0]) * 100, 2)
+                session_data.append([class_name, conf_score])
+
+        annotated = results[0].plot()
+        cv2.imshow('YOLO Real-Time', annotated)
+        if cv2.waitKey(1) & 0xFF == ord('z'):
+            cv2.destroyAllWindows()
+            save_accuracy_data(session_data)
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+    root.deiconify()
 
 def prediction_P():
        global root
        root.withdraw()
        model = YOLO("/Users/hayhay/Documents/ultralytics-main/runs/detect/train11/weights/best.pt")
        img_path = '/Users/hayhay/Documents/labelling/IMG_6267.jpg'
-       results = model(img_path)
-       print (results)
-       if cv2.waitKey(1) == ord('q'):
-            root.update()
-            root.deiconify()
-
+       img = cv2.imread(img_path)
+       results = model(img_path)       
+       for result in results:
+        boxes = result.boxes
+        masks = result.masks
+        keypoints = result.keypoints
+        probs = result.probs
+        if cv2.waitKey(1) == ord('z'):
+            cv2.destroyAllWindows()
+            break
+        print(result)
+        imgsz = 640
+        conf = 0.4
+        iou = 0.7
+           
+        visualize_results_usual_yolo_inference(
+            img,
+            model,
+            imgsz,
+            conf,
+            iou,
+            segment=True,
+            show_boxes=True,
+            show_class=True,
+            fill_mask=False,
+            alpha=0.3,
+            color_class_background=(0, 0, 255),
+            color_class_text=(255, 255, 255),
+            thickness=4,
+            font=cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale=1.5,
+            delta_colors=3,
+            dpi=150,
+            random_object_colors=False,
+            show_confidences=False,
+            axis_off=True,
+            show_classes_list=[],
+            list_of_class_colors=None,
+            return_image_array=False,
+            inference_extra_args=None,
+        )
+        cv2.destroyAllWindows()
        
+       root.deiconify()
+
+def save_accuracy_data(data):
+    filename = f"accuracylog{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    # Use io.open instead of just open
+    with io.open(filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Object_Class", "Accuracy_Score"])
+        writer.writerows(data)
+    print(f"Data saved to {filename}")
+
+      
+
 # create main 
 root = tk.Tk()
 root.title("Project Garbage-classification")
@@ -68,4 +146,3 @@ buttonQuit.pack(side="bottom",padx=20)
 
 # main
 root.mainloop()
-    

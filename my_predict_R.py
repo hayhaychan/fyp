@@ -1,10 +1,18 @@
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 from ultralytics import YOLO
-import cvzone
 
-# Use 0 for built-in camera, 1 or 2 for external
-model = YOLO("/Users/hayhay/Documents/ultralytics-main/runs/detect/train11/weights/best.pt")
-results = model.predict(source=0, show=True)
-print (results)
+def prediction_R(root):
+    model = YOLO("/Users/hayhay/Documents/ultralytics-main/runs/detect/train11/weights/best.pt")
+    cap = cv2.VideoCapture(0)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        results = model(frame)
+        annotated = results[0].plot()
+        cv2.imshow('YOLO Real-Time', annotated)
+        if cv2.waitKey(1) & 0xFF == ord('z'):
+            root.deiconify()
+            break
+    cap.release()
+    cv2.destroyAllWindows()
